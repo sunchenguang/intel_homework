@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<meta name="keywords" content="jquery，CSS，时钟" />
+<meta name="description" content="" />
+<title>HTML5数字时钟之闹钟</title>
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="style3.css">
+<script type="text/javascript" src="jquery.min.js"></script>
+<script src="moment.min.js"></script>
+</head>
+
+<body>
+<div id="header">
+   <div id="logo"><h1><a href="javascript:void(0);" title="测试">intel xdk homework</a></h1></div>
+</div>
+<div id="main">
+   <h2 class="top_title"><a href="javascript:void(0);">HTML5数字时钟之闹钟</a></h2>
+   	<div class="demo">  
+		
+        <div id="clock" class="light">
+			<div class="display">
+				<div class="date"></div>
+                <div class="alarm"></div>
+				<div class="digits"></div>
+			</div>
+		</div>
+        
+	</div>
+    
+    <div class="overlay" id="settime">
+		<div id="alarm-dialog">
+			<h2>设置闹钟触发时长</h2>
+			<label class="hours">
+				时
+				<input type="number" value="0" min="0" />
+			</label>
+			<label class="minutes">
+				分
+				<input type="number" value="0" min="0" />
+			</label>
+			<label class="seconds">
+				秒
+				<input type="number" value="0" min="0" />
+			</label>
+			<div class="button-holder">
+				<a id="alarm-set" class="button blue">设置</a>
+			</div>
+			<a class="close"></a>
+		</div>
+	</div>
+        
+    <div class="overlay" id="timeisup">
+		<div id="time-is-up">
+			<h2>时间到!</h2>
+			<div class="button-holder">
+				<a class="button blue">关闭</a>
+			</div>
+		</div>
+	</div>
+        
+    <audio id="ring" preload>
+		<source src="audio/ticktac.mp3" type="audio/mpeg" />
+		<source src="audio/ticktac.ogg" type="audio/ogg" />
+	</audio>
+    
+    
+		<br/>
+        
+        <br/>
+
+</div>
+<script>
+$(function(){
+    var clock = $('#clock');
+	//定义数字数组0-9
+	var digit_to_name = ['zero','one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+	//定义星期
+	var weekday = ['周日','周一','周二','周三','周四','周五','周六'];
+
+    var digits = {};
+
+    //定义时分秒位置
+    var positions = [
+        'h1', 'h2', ':', 'm1', 'm2', ':', 's1', 's2'
+    ];
+
+    //构建数字时钟的时分秒
+
+    var digit_holder = clock.find('.digits');
+
+    $.each(positions, function(){
+
+        if(this == ':'){
+            digit_holder.append('<div class="dots">');
+        }
+        else{
+
+            var pos = $('<div>');
+
+            for(var i=1; i<8; i++){
+                pos.append('<span class="d' + i + '">');
+            }
+
+            digits[this] = pos;
+
+            digit_holder.append(pos);
+        }
+
+    });
+	
+	var alarm_counter = -1;
+	
+
+    // 让时钟跑起来
+    (function update_time(){
+
+        //调用moment.js来格式化时间
+        var now = moment().format("HHmmss");
+
+        digits.h1.attr('class', digit_to_name[now[0]]);
+        digits.h2.attr('class', digit_to_name[now[1]]);
+        digits.m1.attr('class', digit_to_name[now[2]]);
+        digits.m2.attr('class', digit_to_name[now[3]]);
+        digits.s1.attr('class', digit_to_name[now[4]]);
+        digits.s2.attr('class', digit_to_name[now[5]]);
+
+		var date = moment().format("YYYY年MM月DD日");
+		var week = weekday[moment().format('d')];
+		$(".date").html(date + ' ' + week);
+		
+		//闹钟
+		var alarm = $(".alarm");
+		if(alarm_counter > 0){
+			alarm_counter--;
+			alarm.addClass('active');
+		}
+		else if(alarm_counter == 0){
+
+			$("#timeisup").fadeIn();
+			//在支持html audio的浏览器上播放声音
+			try{
+				$("#ring")[0].play();
+			}
+			catch(e){}
+			
+			alarm_counter--;
+			alarm.removeClass('active');
+		}
+		else{
+			alarm.removeClass('active');
+		}
+
+        // 每秒钟运行一次
+        setTimeout(update_time, 1000);
+    })();
+	
+	$('.alarm').click(function(){
+		$("#settime").show();
+	});
+
+	$('a.close').click(function(){
+		$("#settime").hide();
+	});
+	
+	$("#alarm-set").click(function(){
+		var valid = true, after = 0,
+			to_seconds = [3600, 60, 1];
+		
+		$("#settime").find('input').each(function(i){
+			if(this.validity && !this.validity.valid){
+
+				valid = false;
+				this.focus();
+
+				return false;
+			}
+			after += to_seconds[i] * parseInt(parseInt(this.value));
+		});
+
+		if(!valid){
+			alert('请输入有效数字!');
+			return;
+		}
+
+		if(after < 1){
+			alert('请输入有效的时间!');
+			return;	
+		}
+
+		alarm_counter = after;
+		$("#settime").hide();
+	});
+	
+	$("#timeisup").click(function(){
+		$("#timeisup").fadeOut();
+		$("#settime").find('input').attr('value','0');
+	});
+});
+</script>
+
+</body>
+</html>
